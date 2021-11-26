@@ -20,7 +20,7 @@ class FastSpeech(nn.Module):
         x = self.encoder(batch.tokens)
        #  (batch_size, seq_len, hidden)
 
-        x, lengths = self.length_aligner(x)
+        x, lengths = self.length_aligner(x, batch.durations)
 
         x = self.decoder(x)
 

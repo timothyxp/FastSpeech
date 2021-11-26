@@ -2,6 +2,7 @@ import torch
 from torch import nn
 from tts.model.config import FSConfig
 from .layers import FFT
+from tts.collate_fn.collate import Batch
 from functools import partial
 from .sublayers import Transpose
 
@@ -78,16 +79,59 @@ class LengthAligner(nn.Module):
             nn.ReLU()
         )
 
-    def forward(self, x):
-        length = self.net(x).squeeze()
+    def forward(self, x, true_durations=None):
+        length = self.net(x).squeeze(-1)
         # batch_size, seq_len
 
-        np_length = length.detach().exp().cpu().numpy()
-        real_len = np_length.round()
-        align_matrix = torch.zeros((x.shape[0], int(real_len.max())))
+        if true_durations is not None:
+            np_length = true_durations.exp().cpu().numpy()
+        else:
+            np_length = length.detach().exp().cpu().numpy()
+
+        np_length = np_length.round().astype(int)
+
+        real_len = np_length.sum(axis=-1)
+
+        align_matrix = torch.zeros((x.shape[0], x.shape[1], int(real_len.max())))
+        align_matrix = gen_binary_alignment(align_matrix, np_length)
+
+        x = x.transpose(-1, -2) @ align_matrix
+        x = x.transpose(-1, -2)
 
         return x, length
 
 
+@torch.no_grad()
 def gen_binary_alignment(mask, lengths):
+    for i in range(mask.shape[0]):
+        cur_length = 0
+        for j in range(mask.shape[1]):
+            mask[i, j, cur_length: cur_length + lengths[i][j]] = 1
+            cur_length += lengths[i][j]
+
     return mask
+
+
+"""
+a = torch.arange(5).repeat(2, 1) 
+
+b = torch.LongTensor([[
+    [1, 0, 0, 0, 0, 0],
+    [0, 1, 0, 0, 0, 0],
+    [0, 0, 1, 0, 0, 0],
+    [0, 0, 0, 1, 0, 0],
+    [0, 0, 0, 0, 1, 1]
+],[
+    [1, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0]
+]])
+
+a.unsqueeze(1) @ b
+
+tensor([[[0, 1, 2, 3, 4, 4]],
+
+        [[0, 0, 0, 0, 0, 0]]])
+"""

@@ -10,9 +10,10 @@ def train_epoch(model, optimizer, loader, scheduler, loss_fn, config, featurizer
 
         batch.melspec = featurizer(batch.waveform)
 
-        batch.durations = aligner(
-            batch.waveform, batch.waveforn_length, batch.transcript
-        )
+        with torch.no_grad():
+            batch.durations = aligner(
+                batch.waveform, batch.waveforn_length, batch.transcript
+            )
 
         optimizer.zero_grad()
 
