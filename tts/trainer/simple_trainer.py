@@ -6,9 +6,9 @@ def train_epoch(model, optimizer, loader, scheduler, loss_fn, config, featurizer
     model.train()
 
     for i, batch in enumerate(tqdm(iter(loader))):
-        batch = batch.to(config['device'])
-
         batch.melspec = featurizer(batch.waveform)
+
+        batch = batch.to(config['device'])
 
         with torch.no_grad():
             batch.durations = aligner(
