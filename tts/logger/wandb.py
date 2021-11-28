@@ -15,8 +15,8 @@ class WanDBWriter:
                 raise ValueError("please specify project name for wandb")
 
             wandb.init(
-                project=config['trainer'].get('wandb_project'),
-                config=config.config
+                project=config.get('wandb_project'),
+                config=config
             )
             self.wandb = wandb
 

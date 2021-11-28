@@ -25,9 +25,6 @@ class Batch:
 
 
 class LJSpeechCollator:
-    def __init__(self, melspec):
-        self.melspec = melspec
-
     def __call__(self, instances: List[Tuple]) -> Batch:
         waveform, waveform_length, transcript, tokens, token_lengths = list(
             zip(*instances)
@@ -44,3 +41,12 @@ class LJSpeechCollator:
         token_lengths = torch.cat(token_lengths)
 
         return Batch(waveform, waveform_length, transcript, tokens, token_lengths)
+
+
+class TestCollator:
+    def __call__(self, instances: List[Tuple]) -> Batch:
+        tokens, token_lengths, transcript = list(zip(*instances))
+
+        empty = torch.zeros(0)
+
+        return Batch(empty, empty, transcript, tokens, token_lengths)

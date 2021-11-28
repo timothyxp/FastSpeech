@@ -1,11 +1,13 @@
 from tqdm.autonotebook import tqdm
 import torch
+from tts.logger.wandb import WanDBWriter
 
 
-def train_epoch(model, optimizer, loader, scheduler, loss_fn, config, featurizer, aligner, wandb=None):
+def train_epoch(model, optimizer, loader, scheduler, loss_fn, config, featurizer, aligner, logger: WanDBWriter):
     model.train()
 
     for i, batch in enumerate(tqdm(iter(loader))):
+        logger.set_step(i, mode='train')
         batch = batch.to(config['device'])
         batch.melspec = featurizer(batch.waveform)
 
@@ -36,11 +38,10 @@ def train_epoch(model, optimizer, loader, scheduler, loss_fn, config, featurizer
         np_melspec_loss = melspec_loss.detach().cpu().numpy()
         print(np_length_loss, np_melspec_loss)
 
-        if config['use_wandb']:
-            wandb.log({
-                "train/melspec_loss": np_melspec_loss,
-                "train/length_loss": np_length_loss
-            })
+        logger.add_scalars({
+            "melspec_loss": np_melspec_loss,
+            "length_loss": np_length_loss
+        })
 
         #   scaler.scale(loss).backward()
 
@@ -54,36 +55,18 @@ def train_epoch(model, optimizer, loader, scheduler, loss_fn, config, featurizer
 
 
 @torch.no_grad()
-def evaluate(model, loader):
+def evaluate(model, loader, config, vocoder, logger: WanDBWriter):
     model.eval()
-    losses = 0
+    logger.set_step(logger.step, "val")
 
     for batch in tqdm(iter(loader)):
-     #   batch: Seq2SeqBatch = batch.to(device)
-  #      batch = batch.generate_masks(device)
+        batch = batch.to(config['device'])
 
-        logits = model(
-            batch.lns_ids['de'],
-            batch.lns_ids['en'][:-1, :],
-            batch.src_mask, batch.tgt_mask,
-            batch.src_padding_mask, batch.tgt_padding_mask, batch.src_padding_mask
-        )
+        batch = model(batch)
 
-        # loss = loss_fn(
-        #     logits.reshape(-1, logits.shape[-1]),
-        #     batch.lns_ids['en'][1:, :].reshape(-1)
-        # )
+        for i in range(batch.melspec_prediction.shape[0]):
+            reconstructed_wav = vocoder.inference(batch.melspec_prediction[i:i + 1].transpose(-1, -2)).cpu()
 
-   #     losses += loss.detach().cpu().numpy()
+            logger.add_text("text", batch.transcript[i])
+            logger.add_audio("audio", reconstructed_wav)
 
-    val_loss = losses / len(loader)
-
-  #  blue = calc_blue(val_data)
-
-    # if config['use_wandb']:
-    #     wandb.log({
-    #         "eval/loss": val_loss,
-    #         "eval/blue": blue
-    #     })
-    #
-    # return val_loss, blue
