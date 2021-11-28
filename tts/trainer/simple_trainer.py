@@ -7,7 +7,7 @@ def train_epoch(model, optimizer, loader, scheduler, loss_fn, config, featurizer
     model.train()
 
     for i, batch in enumerate(tqdm(iter(loader))):
-        logger.set_step(i, mode='train')
+        logger.set_step(logger.step + 1, mode='train')
         batch = batch.to(config['device'])
         batch.melspec = featurizer(batch.waveform)
 
