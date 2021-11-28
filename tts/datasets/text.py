@@ -10,12 +10,12 @@ default_text = [
 ]
 
 
-class LJSpeechDataset(Dataset):
+class TextDataset(Dataset):
     def __init__(self, texts: List[str] = None):
         super().__init__()
         self._tokenizer = torchaudio.pipelines.TACOTRON2_GRIFFINLIM_CHAR_LJSPEECH.get_text_processor()
 
-        self.texts = self.texts
+        self.texts = texts or default_text
 
     def __len__(self):
         return len(self.texts)

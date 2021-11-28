@@ -1,27 +1,23 @@
 from datetime import datetime
 import numpy as np
+import wandb
 
 
 class WanDBWriter:
-    def __init__(self, config, logger):
+    def __init__(self, config):
         self.writer = None
         self.selected_module = ""
 
-        try:
-            import wandb
-            wandb.login()
+        wandb.login()
 
-            if config['trainer'].get('wandb_project') is None:
-                raise ValueError("please specify project name for wandb")
+        if config.get('wandb_project') is None:
+            raise ValueError("please specify project name for wandb")
 
-            wandb.init(
-                project=config.get('wandb_project'),
-                config=config
-            )
-            self.wandb = wandb
-
-        except ImportError:
-            logger.warning("For use wandb install it via \n\t pip install wandb")
+        wandb.init(
+            project=config.get('wandb_project'),
+            config=config
+        )
+        self.wandb = wandb
 
         self.step = 0
         self.mode = ""
@@ -38,7 +34,7 @@ class WanDBWriter:
             self.timer = datetime.now()
 
     def scalar_name(self, scalar_name):
-        return f"{scalar_name}_{self.mode}"
+        return f"{self.mode}/{scalar_name}"
 
     def add_scalar(self, scalar_name, scalar):
         self.wandb.log({
@@ -56,6 +52,7 @@ class WanDBWriter:
         }, step=self.step)
 
     def add_audio(self, scalar_name, audio, sample_rate=None):
+        print(sample_rate)
         audio = audio.detach().cpu().numpy().T
         self.wandb.log({
             self.scalar_name(scalar_name): self.wandb.Audio(audio, sample_rate=sample_rate)

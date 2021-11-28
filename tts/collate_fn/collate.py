@@ -48,5 +48,10 @@ class TestCollator:
         tokens, token_lengths, transcript = list(zip(*instances))
 
         empty = torch.zeros(0)
+        
+        tokens = pad_sequence([
+            tokens_[0] for tokens_ in tokens
+        ]).transpose(0, 1)
+        token_lengths = torch.cat(token_lengths)
 
         return Batch(empty, empty, transcript, tokens, token_lengths)
