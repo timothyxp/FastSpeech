@@ -76,7 +76,6 @@ class LengthAligner(nn.Module):
             nn.LayerNorm(config.length_aligner_filter_size),
             nn.GELU(),
             nn.Linear(config.length_aligner_filter_size, 1),
-            nn.ReLU()
         )
 
     def forward(self, x, true_durations=None):
