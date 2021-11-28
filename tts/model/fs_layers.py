@@ -12,6 +12,8 @@ class Encoder(nn.Module):
         super().__init__()
         self.emb = nn.Embedding(config.vocab_size, config.hidden_size)
 
+        self.pos_emb_layer = nn.Embedding(config.max_len, config.hidden_size)
+
         fft_layer = partial(FFT,
             config.hidden_size, config.encoder_num_heads, config.fft_num_filters,
             config.fft_conv_kernel, config.fft_padding
@@ -23,6 +25,11 @@ class Encoder(nn.Module):
 
     def forward(self, text_ids):
         x = self.emb(text_ids)
+
+        pos_ids = torch.arange(text_ids.shape[1])
+        pos_x = self.pos_embedding_layer(pos_ids.unsqueeze(0))
+
+        x += pos_x
 
         for layer in self.layers:
             x, _ = layer(x)
@@ -39,11 +46,17 @@ class Decoder(nn.Module):
             config.fft_conv_kernel, config.fft_padding
         )
 
+        self.pos_emb_layer = nn.Embedding(config.max_len, config.hidden_size)
+
         self.layers = nn.ModuleList([
             fft_layer() for _ in range(config.decoder_num_layers)
         ])
 
     def forward(self, x):
+        pos_ids = torch.arange(x.shape[1])
+        pos_x = self.pos_embedding_layer(pos_ids.unsqueeze(0))
+
+        x += pos_x
 
         for layer in self.layers:
             x, _ = layer(x)
@@ -75,7 +88,7 @@ class LengthAligner(nn.Module):
             Transpose(-1, -2),
             nn.LayerNorm(config.length_aligner_filter_size),
             nn.GELU(),
-            nn.Linear(config.length_aligner_filter_size, 1),
+            nn.Linear(config.length_aligner_filter_size, 1)
         )
 
     def forward(self, x, true_durations=None):
