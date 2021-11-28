@@ -23,3 +23,5 @@ class FSConfig:
     length_aligner_kernel_size: int = 3
 
     dropout_p: float = 0
+
+    max_len: int = 3_000
