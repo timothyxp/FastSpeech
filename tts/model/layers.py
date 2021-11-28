@@ -2,6 +2,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 from tts.model.config import FSConfig
+import numpy as np
 from .sublayers import dot_product_attention
 
 
@@ -21,7 +22,21 @@ class MultiHeadAttention(nn.Module):
 
         self.drop = nn.Dropout(dropout_p)
 
+    def reset_parameters(self):
+        nn.init.normal_(self.q.weight, mean=0,
+                        std=np.sqrt(1.0 / self.hidden_size))
+        nn.init.normal_(self.k.weight, mean=0,
+                        std=np.sqrt(1.0 / self.hidden_size))
+        nn.init.normal_(self.v.weight, mean=0,
+                        std=np.sqrt(1.0 / self.hidden_size))
+
+        nn.init.xavier_normal_(self.fc.weight)
+
     def forward(self, q, k=None, v=None, mask=None):
+        residual = q
+
+        q = self.ln(q)
+
         if k is None:
             k = q
         if v is None:
@@ -44,7 +59,7 @@ class MultiHeadAttention(nn.Module):
             .permute(1, 2, 0, 3) \
             .reshape(batch_size, seq_len, hidden * self.num_heads)
 
-        result = self.ln(self.drop(self.proc(output)) + q)
+        result = self.drop(self.proc(output)) + residual
 
         return result, attn
 

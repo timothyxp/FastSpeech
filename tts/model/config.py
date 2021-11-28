@@ -22,4 +22,4 @@ class FSConfig:
     length_aligner_filter_size: int = 256
     length_aligner_kernel_size: int = 3
 
-    dropout_p: float = 0.1
+    dropout_p: float = 0
