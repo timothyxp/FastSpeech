@@ -26,7 +26,7 @@ class Encoder(nn.Module):
     def forward(self, text_ids):
         x = self.emb(text_ids)
 
-        pos_ids = torch.arange(text_ids.shape[1])
+        pos_ids = torch.arange(text_ids.shape[1], device=text_ids.device)
         pos_x = self.pos_emb_layer(pos_ids.unsqueeze(0))
 
         x += pos_x
@@ -53,7 +53,7 @@ class Decoder(nn.Module):
         ])
 
     def forward(self, x):
-        pos_ids = torch.arange(x.shape[1])
+        pos_ids = torch.arange(x.shape[1], device=x.device)
         pos_x = self.pos_emb_layer(pos_ids.unsqueeze(0))
 
         x += pos_x
