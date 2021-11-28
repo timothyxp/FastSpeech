@@ -84,14 +84,14 @@ class LengthAligner(nn.Module):
         # batch_size, seq_len
 
         if true_durations is not None:
-            np_length = true_durations.exp().cpu().numpy()
+            np_length = true_durations.cpu().numpy()
         else:
             np_length = length.detach().exp().cpu().numpy()
 
         np_length = np_length.round().astype(int)
 
         real_len = np_length.sum(axis=-1)
-
+        print(real_len)
         align_matrix = torch.zeros((x.shape[0], x.shape[1], int(real_len.max())))
         align_matrix = gen_binary_alignment(align_matrix, np_length)
 

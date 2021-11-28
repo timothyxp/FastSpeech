@@ -25,6 +25,9 @@ class Batch:
 
 
 class LJSpeechCollator:
+    def __init__(self, melspec):
+        self.melspec = melspec
+
     def __call__(self, instances: List[Tuple]) -> Batch:
         waveform, waveform_length, transcript, tokens, token_lengths = list(
             zip(*instances)

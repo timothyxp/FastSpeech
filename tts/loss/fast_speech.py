@@ -10,7 +10,7 @@ class FastSpeechLossWrapper(nn.Module):
         self.mel_spec_mse = nn.MSELoss()
 
     def forward(self, batch: Batch) -> Tuple[Tensor, Tensor]:
-        len_mse = self.length_mse(batch.durations.exp(), batch.duration_prediction.exp())
+        len_mse = self.length_mse(batch.durations, batch.duration_prediction.exp())
 
         min_len = min(batch.melspec.shape[-1], batch.melspec_prediction.shape[-2])
         mel_spec_mse = self.mel_spec_mse(
