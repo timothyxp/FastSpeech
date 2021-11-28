@@ -91,8 +91,8 @@ class LengthAligner(nn.Module):
         np_length = np_length.round().astype(int)
 
         real_len = np_length.sum(axis=-1)
-        print(real_len)
-        align_matrix = torch.zeros((x.shape[0], x.shape[1], int(real_len.max())))
+
+        align_matrix = torch.zeros((x.shape[0], x.shape[1], int(real_len.max())), device=x.device)
         align_matrix = gen_binary_alignment(align_matrix, np_length)
 
         x = x.transpose(-1, -2) @ align_matrix

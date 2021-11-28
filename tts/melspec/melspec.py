@@ -69,3 +69,9 @@ class MelSpectrogram(nn.Module):
             .log_()
 
         return mel
+    
+    def to(self, device):
+        self.mel_spectrogram = self.mel_spectrogram.to(device)
+        
+        return self
+        

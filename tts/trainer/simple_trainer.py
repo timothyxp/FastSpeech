@@ -6,16 +6,16 @@ def train_epoch(model, optimizer, loader, scheduler, loss_fn, config, featurizer
     model.train()
 
     for i, batch in enumerate(tqdm(iter(loader))):
+        batch = batch.to(config['device'])
         batch.melspec = featurizer(batch.waveform)
 
         batch.melspec_length = batch.melspec.shape[-1] - batch.melspec.eq(-11.5129251)[:, 0, :].sum(dim=-1)
-        print(batch.melspec_length)
-        batch = batch.to(config['device'])
-
+        batch.melspec_length = batch.melspec_length
+        
         with torch.no_grad():
             durations = aligner(
                 batch.waveform, batch.waveforn_length, batch.transcript
-            )
+            ).to(config['device'])
 
             durations = durations * batch.melspec_length.unsqueeze(-1)
 
