@@ -32,7 +32,7 @@ class MultiHeadAttention(nn.Module):
         nn.init.normal_(self.v.weight, mean=0,
                         std=np.sqrt(1.0 / self.hidden_size))
 
-        nn.init.xavier_normal_(self.fc.weight)
+        nn.init.xavier_normal_(self.proc.weight)
 
     def forward(self, q, k=None, v=None, mask=None):
         residual = q
