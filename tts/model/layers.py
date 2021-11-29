@@ -22,6 +22,8 @@ class MultiHeadAttention(nn.Module):
 
         self.drop = nn.Dropout(dropout_p)
 
+        self.reset_parameters()
+
     def reset_parameters(self):
         nn.init.normal_(self.q.weight, mean=0,
                         std=np.sqrt(1.0 / self.hidden_size))
