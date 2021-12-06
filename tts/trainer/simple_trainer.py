@@ -3,7 +3,7 @@ import torch
 from tts.logger.wandb import WanDBWriter
 
 
-def train_epoch(model, optimizer, loader, scheduler, loss_fn, config, featurizer, aligner, logger: WanDBWriter):
+def train_epoch(model, optimizer, loader, scheduler, loss_fn, config, featurizer, aligner, logger: WanDBWriter, vocoder=None):
     model.train()
 
     for i, batch in enumerate(tqdm(iter(loader))):
@@ -45,10 +45,16 @@ def train_epoch(model, optimizer, loader, scheduler, loss_fn, config, featurizer
         if i % config['grad_accum_steps'] == 0:
             optimizer.step()
 
+        if vocoder is not None and i % config['log_train_step'] == 0:
+            reconstructed_wav = vocoder.inference(batch.melspec_prediction[0:1].transpose(-1, -2)).cpu()
+
+            logger.add_text("text", batch.transcript[0])
+            logger.add_audio("audio", reconstructed_wav, sample_rate=22050)
+            
         if i > config['len_epoch']:
             break
 
-    scheduler.step()
+        scheduler.step()
 
 
 @torch.no_grad()
